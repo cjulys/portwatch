@@ -2,55 +2,64 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"time"
 )
 
-var validAlertLevels = map[string]struct{}{
-	"info":  {},
-	"warn":  {},
-	"error": {},
-}
-
-// ValidationError collects one or more validation failures.
+// ValidationError holds a list of problems found in a Config.
 type ValidationError struct {
-	Errs []error
+	Problems []string
 }
 
-func (v *ValidationError) Error() string {
-	msg := "config validation failed:"
-	for _, e := range v.Errs {
-		msg += " " + e.Error() + ";"
+func (e *ValidationError) Error() string {
+	if len(e.Problems) == 1 {
+		return "config: " + e.Problems[0]
+	}
+	msg := fmt.Sprintf("config: %d validation errors", len(e.Problems))
+	for _, p := range e.Problems {
+		msg += "\n  - " + p
 	}
 	return msg
 }
 
-// Validate checks cfg for invalid or contradictory values.
-// It returns a *ValidationError listing all problems, or nil if cfg is valid.
+const minInterval = 5 * time.Second
+
+var validAlertLevels = map[string]bool{
+	"info":  true,
+	"warn":  true,
+	"error": true,
+}
+
+// Validate checks cfg for logical errors and returns a *ValidationError
+// (wrapped as error) if any problems are found, or nil when cfg is valid.
 func Validate(cfg *Config) error {
-	var errs []error
+	var problems []string
 
-	if cfg.Interval < time.Second {
-		errs = append(errs, errors.New("interval must be at least 1s"))
+	if cfg.Interval < minInterval {
+		problems = append(problems,
+			fmt.Sprintf("interval %s is below minimum %s", cfg.Interval, minInterval))
 	}
 
-	if _, ok := validAlertLevels[cfg.AlertLevel]; !ok {
-		errs = append(errs, errors.New("alert_level must be one of: info, warn, error"))
+	if !validAlertLevels[cfg.AlertLevel] {
+		problems = append(problems,
+			fmt.Sprintf("alert_level %q is not valid (want info|warn|error)", cfg.AlertLevel))
 	}
 
-	seen := make(map[uint16]bool)
-	for _, p := range cfg.Ports {
+	seen := make(map[int]bool, len(cfg.WatchPorts))
+	for _, p := range cfg.WatchPorts {
 		if p == 0 {
-			errs = append(errs, errors.New("port 0 is not a valid watch target"))
+			problems = append(problems, "watch_ports contains port 0 which is not allowed")
 			continue
 		}
 		if seen[p] {
-			errs = append(errs, errors.New("duplicate port in watch list"))
+			problems = append(problems, fmt.Sprintf("watch_ports contains duplicate port %d", p))
+		} else {
+			seen[p] = true
 		}
-		seen[p] = true
 	}
 
-	if len(errs) > 0 {
-		return &ValidationError{Errs: errs}
+	if len(problems) == 0 {
+		return nil
 	}
-	return nil
+	return errors.New((&ValidationError{Problems: problems}).Error())
 }
