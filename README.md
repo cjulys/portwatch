@@ -43,11 +43,20 @@ When an unexpected port is detected, `portwatch` will log an alert to stdout:
 | `--allow` | none | Comma-separated list of allowed ports |
 | `--log` | stdout | Path to log file |
 | `--quiet` | false | Suppress stdout output |
+| `--pid` | none | Path to write the daemon PID file |
 
 ### Example with log file
 
 ```bash
 portwatch start --interval 15 --allow 22,443 --log /var/log/portwatch.log
+```
+
+### Stopping the daemon
+
+Send `SIGINT` or `SIGTERM` to gracefully stop the daemon:
+
+```bash
+kill $(cat /var/run/portwatch.pid)
 ```
 
 ## Requirements
