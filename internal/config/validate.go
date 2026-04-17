@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"time"
 )
@@ -51,6 +50,10 @@ func Validate(cfg *Config) error {
 			problems = append(problems, "watch_ports contains port 0 which is not allowed")
 			continue
 		}
+		if p < 0 || p > 65535 {
+			problems = append(problems, fmt.Sprintf("watch_ports contains invalid port %d (must be 1-65535)", p))
+			continue
+		}
 		if seen[p] {
 			problems = append(problems, fmt.Sprintf("watch_ports contains duplicate port %d", p))
 		} else {
@@ -61,5 +64,5 @@ func Validate(cfg *Config) error {
 	if len(problems) == 0 {
 		return nil
 	}
-	return errors.New((&ValidationError{Problems: problems}).Error())
+	return &ValidationError{Problems: problems}
 }
