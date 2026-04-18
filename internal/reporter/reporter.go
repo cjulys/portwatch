@@ -20,9 +20,9 @@ const (
 
 // Entry represents a single snapshot report entry.
 type Entry struct {
-	Timestamp time.Time       `json:"timestamp"`
-	Ports     []scanner.Port  `json:"ports"`
-	Count     int             `json:"count"`
+	Timestamp time.Time      `json:"timestamp"`
+	Ports     []scanner.Port `json:"ports"`
+	Count     int            `json:"count"`
 }
 
 // Reporter writes periodic port snapshot reports to a writer.
@@ -76,4 +76,17 @@ func (r *Reporter) writeText(e Entry) error {
 func (r *Reporter) writeJSON(e Entry) error {
 	enc := json.NewEncoder(r.w)
 	return enc.Encode(e)
+}
+
+// SetFormat updates the output format used by the reporter.
+func (r *Reporter) SetFormat(format Format) {
+	if format == "" {
+		return
+	}
+	r.format = format
+}
+
+// Format returns the current output format of the reporter.
+func (r *Reporter) Format() Format {
+	return r.format
 }
