@@ -43,3 +43,27 @@ func Ports(ports []scanner.Port) string {
 func Changed(prev []scanner.Port, current []scanner.Port) bool {
 	return Ports(prev) != Ports(current)
 }
+
+// Diff returns ports that are present in current but absent in prev (added)
+// and ports present in prev but absent in current (removed).
+func Diff(prev, current []scanner.Port) (added, removed []scanner.Port) {
+	prevIndex := make(map[string]struct{}, len(prev))
+	for _, p := range prev {
+		prevIndex[Port(p)] = struct{}{}
+	}
+
+	currIndex := make(map[string]struct{}, len(current))
+	for _, p := range current {
+		currIndex[Port(p)] = struct{}{}
+		if _, ok := prevIndex[Port(p)]; !ok {
+			added = append(added, p)
+		}
+	}
+
+	for _, p := range prev {
+		if _, ok := currIndex[Port(p)]; !ok {
+			removed = append(removed, p)
+		}
+	}
+	return added, removed
+}
