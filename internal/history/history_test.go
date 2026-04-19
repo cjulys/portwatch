@@ -91,3 +91,31 @@ func TestLoadMissingFileReturnsEmpty(t *testing.T) {
 		t.Errorf("expected 0 entries for missing file, got %d", got)
 	}
 }
+
+func TestMaxSizeEvictionKeepsNewest(t *testing.T) {
+	h, err := New(tempPath(t), 2)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	for i := 1; i <= 4; i++ {
+		if err := h.Add(makePorts(i)); err != nil {
+			t.Fatalf("Add: %v", err)
+		}
+	}
+	entries := h.Entries()
+	if len(entries) != 2 {
+		t.Fatalf("expected 2 entries, got %d", len(entries))
+	}
+	// The two most recent scans should have ports 3 and 4.
+	ports := map[int]bool{}
+	for _, e := range entries {
+		for _, p := range e.Ports {
+			ports[p.Number] = true
+		}
+	}
+	for _, want := range []int{3, 4} {
+		if !ports[want] {
+			t.Errorf("expected port %d in newest entries", want)
+		}
+	}
+}
