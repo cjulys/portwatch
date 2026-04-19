@@ -42,9 +42,10 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	log.Printf("portwatch: starting (interval=%ds, state=%s)", cfg.IntervalSeconds, *statePath)
+	log.Printf("portwatch: starting (interval=%ds, targets=%d, state=%s)", cfg.IntervalSeconds, len(cfg.Targets), *statePath)
 	if err := w.Run(ctx); err != nil && err != context.Canceled {
 		log.Printf("portwatch: exited with error: %v", err)
+		os.Exit(1)
 	}
 	log.Println("portwatch: stopped")
 }
