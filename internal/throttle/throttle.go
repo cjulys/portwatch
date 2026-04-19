@@ -53,3 +53,18 @@ func (t *Throttle) Flush() {
 	defer t.mu.Unlock()
 	t.last = make(map[string]time.Time)
 }
+
+// Remaining returns the time left in the cooldown window for the given key.
+// Returns 0 if the key is not throttled or the cooldown has already elapsed.
+func (t *Throttle) Remaining(key string) time.Duration {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if last, ok := t.last[key]; ok {
+		elapsed := t.now().Sub(last)
+		if elapsed < t.cooldown {
+			return t.cooldown - elapsed
+		}
+	}
+	return 0
+}
