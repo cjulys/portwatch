@@ -16,9 +16,13 @@ func PortKey(p scanner.Port) string {
 // direction of change ("opened" or "closed"), so that open and close
 // events for the same port are throttled independently.
 func DiffKey(p scanner.Port, opened bool) string {
-	direction := "closed"
+	return fmt.Sprintf("%s:%s", PortKey(p), diffDirection(opened))
+}
+
+// diffDirection returns the string representation of the change direction.
+func diffDirection(opened bool) string {
 	if opened {
-		direction = "opened"
+		return "opened"
 	}
-	return fmt.Sprintf("%s:%d:%s", p.Protocol, p.Number, direction)
+	return "closed"
 }
