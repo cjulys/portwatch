@@ -64,4 +64,10 @@ func TestResetClearsAll(t *testing.T) {
 	if s.ScansTotal != 0 || s.AlertsTotal != 0 {
 		t.Fatal("expected zeroed metrics after reset")
 	}
+	if s.OpenPortCount != 0 {
+		t.Fatal("expected zero open port count after reset")
+	}
+	if !s.LastScanAt.IsZero() || !s.LastAlertAt.IsZero() {
+		t.Fatal("expected zero times after reset")
+	}
 }
