@@ -1,22 +1,12 @@
-// Package suppress manages per-port alert suppression rules for portwatch.
+// Package suppress provides time-bounded suppression rules for port
+// change alerts. A Suppressor holds a set of rules keyed by protocol,
+// address, and port. Rules expire after a configurable duration, after
+// which the corresponding port will once again generate alerts.
 //
-// A suppression rule silences notifications for a specific port/protocol pair
-// either indefinitely (zero Until) or until a given time. Rules are persisted
-// to a JSON file so they survive daemon restarts.
+// Rules may be exact (matching a specific address) or wildcard
+// (matching any address on a given protocol/port pair). Wildcard rules
+// are looked up via WildcardKey when an exact match is absent.
 //
-// Typical usage:
-//
-//	store := suppress.New("/var/lib/portwatch/suppress.json")
-//
-//	// suppress port 8080/tcp for one hour
-//	store.Add(suppress.Rule{
-//		Port:     8080,
-//		Protocol: "tcp",
-//		Until:    time.Now().Add(time.Hour),
-//	})
-//
-//	// check before dispatching an alert
-//	if !store.IsSuppressed(port, proto) {
-//		notifier.Dispatch(event)
-//	}
+// Rules are persisted to a JSON file so that suppressions survive
+// process restarts.
 package suppress
