@@ -52,3 +52,21 @@ func TestRoundTripPreservesFields(t *testing.T) {
 		t.Error("timestamp zero")
 	}
 }
+
+func TestReadAllEmptyFile(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "audit.log")
+
+	// Create a logger but record nothing, so the file may not exist or is empty.
+	_, err := audit.New(p)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	entries, err := audit.ReadAll(p)
+	if err != nil {
+		t.Fatalf("ReadAll on empty log: %v", err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("expected 0 entries, got %d", len(entries))
+	}
+}
